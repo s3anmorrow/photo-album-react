@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    image: mysql-server
+    container_name: my-mysql-server
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - data-volume:/var/lib/mysql
+
+    # these variables could be stored in an external .env file as well
+    # w0090347 will automatically be set to full access to sean_dotnetcoreSamples
+    environment:
+      MYSQL_ROOT_PASSWORD: nscc
+      MYSQL_DATABASE: sean_fullstackSamples
+      MYSQL_USER: w0090347
+      MYSQL_PASSWORD: Forrester308
+
+  adminer:
+    image: adminer
+    container_name: my-adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  api:
+    # where the container's files are located in project folder
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    # the name of the container image docker-compose will build
+    image: api-server
+    # the name of the container when running
+    container_name: my-api-server
+    volumes:
+      - ./api:/var/www/html/
+    # exposing port 80 and mapping to container's external port 80 so it can be hit
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=development
+  
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: client-server
+    container_name: my-client-server
+    command: npm start
+    volumes:
+      # bind mounting entire project folder to container for watcher detection
+      - ./client:/usr/app
+      # node_modules gets its own volume for all containers to share
+      - node_modules:/usr/app/node_modules
+    ports:
+      - "3000:3000"
+
+volumes:
+    node_modules:
+    data-volume:
